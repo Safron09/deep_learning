@@ -1,11 +1,12 @@
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import l1_l2
+from tensorflow.keras.callbacks import EarlyStopping
 
 
 data_file_path = 'Data_sets/appl_stock/AAPL.csv'
@@ -30,13 +31,21 @@ y_scaled = scaler_y.fit_transform(y.reshape(-1, 1)).flatten()
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_scaled, test_size=0.2, shuffle=False)
 
 model = Sequential()
-model.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
-model.add(LSTM(units=50))
+model.add(LSTM(units=100, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]),
+               kernel_regularizer=l1_l2(l1=1e-5, l2=1e-4),
+               bias_regularizer=l1_l2(l1=1e-4, l2=1e-3),
+               activity_regularizer=l1_l2(l1=1e-5, l2=1e-4)))
+model.add(Dropout(0.2))
+model.add(LSTM(units=30, kernel_regularizer=l1_l2(l1=1e-5, l2=1e-4),
+               bias_regularizer=l1_l2(l1=1e-4, l2=1e-3),
+               activity_regularizer=l1_l2(l1=1e-5, l2=1e-4)))
+model.add(Dropout(0.2))
 model.add(Dense(units=1))
 
 model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
-
-model.fit(X_train, y_train, epochs=200, batch_size=16)
+early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+history = model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2, callbacks=[early_stopping])
+model.fit(X_train, y_train, epochs=100, batch_size=32)
 
 loss = model.evaluate(X_test, y_test)
 
