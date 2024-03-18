@@ -42,7 +42,7 @@ model.add(LSTM(units=30, kernel_regularizer=l1_l2(l1=1e-5, l2=1e-4),
 model.add(Dropout(0.2))
 model.add(Dense(units=1))
 
-model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
+model.compile(optimizer=Adam(learning_rate=0.001 ), loss='mean_squared_error')
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 history = model.fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2, callbacks=[early_stopping])
 model.fit(X_train, y_train, epochs=100, batch_size=32)
