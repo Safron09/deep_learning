@@ -13,7 +13,7 @@ from sklearn.preprocessing import MinMaxScaler
 sc = MinMaxScaler(feature_range=(0, 1))
 training_set_scaled = sc.fit_transform(training_set)
 
-# Create a data structure with 60 timesteps and 1 output
+# Create a data structure with 60 time steps and 1 output
 X_train = []
 y_train = []
 for i in range(60, 1258):
@@ -56,5 +56,19 @@ regressor.compile(optimizer='adam', loss='mean_squared_error')
 # Fitting the RNN to the training set
 regressor.fit(X_train, y_train, epochs=100, batch_size=32)
 
+# Part 3
+# Setting real stock price
+dataset_test = pd.read_csv("Data_sets/google_stock_prices/Google_Stock_Price_Test.csv")
+real_stock_price = dataset_test.iloc[:, 1:2].values
 
-print(regressor)
+# Predicting Stock Price
+dataset_total = pd.concat((dataset_train['Open'], dataset_test['Open']), axis=0)
+inputs = dataset_total[len(dataset_total) - len(dataset_test) - 60:].values
+inputs = inputs.reshape(-1,1)
+inputs = sc.transform(inputs)
+
+
+
+
+
+print(real_stock_price)
