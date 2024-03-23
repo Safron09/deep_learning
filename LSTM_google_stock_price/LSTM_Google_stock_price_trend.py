@@ -20,6 +20,7 @@ training_set_scaled = sc.fit_transform(training_set)
 # Create a data structure with 60 time steps and 1 output
 X_train = []
 y_train = []
+# To update correct ranges of the test file strings amount use -1 from the list
 for i in range(60, 1258):
     X_train.append(training_set_scaled[i-60:i, 0])
     y_train.append(training_set_scaled[i, 0])
@@ -87,17 +88,19 @@ predicted_stock_price = sc.inverse_transform(predicted_stock_price)
 # plt.legend()
 # plt.show()
 
+
+# Using Plotly to make it compatible on different IDEs
 trace1 = go.Scatter(
-    x = list(range(len(real_stock_price))),
-    y = real_stock_price.flatten(),  # Assuming real_stock_price is a numpy array
-    mode = 'lines',
-    name = 'Real Stock Price'
+    x=list(range(len(real_stock_price))),
+    y=real_stock_price.flatten(),
+    mode='lines',
+    name='Real Stock Price'
 )
 trace2 = go.Scatter(
-    x = list(range(len(predicted_stock_price))),
-    y = predicted_stock_price.flatten(),  # Assuming predicted_stock_price is a numpy array
-    mode = 'lines',
-    name = 'Predicted Stock Price'
+    x=list(range(len(predicted_stock_price))),
+    y=predicted_stock_price.flatten(),
+    mode='lines',
+    name='Predicted Stock Price'
 )
 # Layout
 layout = go.Layout(
