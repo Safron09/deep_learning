@@ -23,7 +23,7 @@ training_set_scaled = sc.fit_transform(training_set)
 X_train = []
 y_train = []
 # To update correct ranges of the test file strings amount use -1 from the list
-for i in range(60, 5035):
+for i in range(60, 4807):
     X_train.append(training_set_scaled[i-60:i, 0])
     y_train.append(training_set_scaled[i, 0])
 X_train, y_train = np.array(X_train), np.array(y_train)
@@ -71,7 +71,7 @@ regressor.fit(X_train, y_train, epochs=100, batch_size=32, callbacks=[early_stop
 
 # Part 3
 # Setting real stock price
-dataset_test = pd.read_csv("Data_sets/KO/KO_feb_23_24_to_mar_23_24.csv")
+dataset_test = pd.read_csv("Data_sets/KO/KO_2023_2024_test.csv")
 real_stock_price = dataset_test.iloc[:, 1:2].values
 
 # Predicting Stock Price
@@ -80,7 +80,7 @@ inputs = dataset_total[len(dataset_total) - len(dataset_test) - 60:].values
 inputs = inputs.reshape(-1, 1)
 inputs = sc.transform(inputs)
 X_test = []
-for i in range(60, 80):
+for i in range(60, 312):
     X_test.append(inputs[i-60:i, 0])
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
