@@ -7,10 +7,26 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from keras.callbacks import EarlyStopping
 
+# Data Set location
+dataset_train_location = "Data_sets/NVIDIA/NVDA_train.csv"
+dataset_test_location = "Data_sets/NVIDIA/NVDA_test.csv"
+# Variables
+epochs_number = 1
+batch_size_number = 32
+# Variables for Fitting
+monitor_type = 'val_loss'
+patience_number = 10,
+verbose_number = 1,
+restore_best_weights = True
+# Variables Compiler
+optimizer_type = 'adam'
+loss_type = 'mean_squared_error'
+
+
 
 # PART 1
 # Data Import
-dataset_train = pd.read_csv("Data_sets/KO/KO_feb_24_2004_to_mar_23_2004.csv")
+dataset_train = pd.read_csv(dataset_train_location)
 training_set = dataset_train.iloc[:, 1:2].values    # Upper Bound excluded
 
 # Feature Scaling
@@ -22,8 +38,7 @@ training_set_scaled = sc.fit_transform(training_set)
 # Create a data structure with 60 time steps and 1 output
 X_train = []
 y_train = []
-# To update correct ranges of the test file strings amount use -1 from the list
-for i in range(60, 4807):
+for i in range(60, training_set_scaled.shape[0]):
     X_train.append(training_set_scaled[i-60:i, 0])
     y_train.append(training_set_scaled[i, 0])
 X_train, y_train = np.array(X_train), np.array(y_train)
@@ -58,20 +73,22 @@ regressor.add(Dropout(rate=0.2))
 regressor.add(Dense(units=1))
 
 # Compiling the RNN
-regressor.compile(optimizer='adam', loss='mean_squared_error')
+regressor.compile(optimizer=optimizer_type, loss=loss_type)
 
 # Fitting the RNN to the training set
 early_stopping = EarlyStopping(
-    monitor='val_loss',
-    patience=10,         # Number of epochs with no improvement
-    verbose=1,
-    restore_best_weights=True  # Restores model weights from the epoch with the best value of the monitored metric
+    monitor=monitor_type,
+    # Number of epochs with no improvement
+    patience=patience_number,
+    verbose=verbose_number,
+    # Restores model weights from the epoch with the best value of the monitored metric
+    restore_best_weights=restore_best_weights
 )
-regressor.fit(X_train, y_train, epochs=100, batch_size=32, callbacks=[early_stopping])
+regressor.fit(X_train, y_train, epochs=epochs_number, batch_size=batch_size_number, callbacks=[early_stopping])
 
 # Part 3
 # Setting real stock price
-dataset_test = pd.read_csv("Data_sets/KO/KO_2023_2024_test.csv")
+dataset_test = pd.read_csv(dataset_test_location)
 real_stock_price = dataset_test.iloc[:, 1:2].values
 
 # Predicting Stock Price
@@ -80,7 +97,7 @@ inputs = dataset_total[len(dataset_total) - len(dataset_test) - 60:].values
 inputs = inputs.reshape(-1, 1)
 inputs = sc.transform(inputs)
 X_test = []
-for i in range(60, 312):
+for i in range(60, inputs.shape[0]):
     X_test.append(inputs[i-60:i, 0])
 X_test = np.array(X_test)
 X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
@@ -96,29 +113,23 @@ predicted_stock_price = sc.inverse_transform(predicted_stock_price)
 # plt.legend()
 # plt.show()
 
-
 # Using Plotly to make it compatible on different IDEs
 trace1 = go.Scatter(
     x=list(range(len(real_stock_price))),
     y=real_stock_price.flatten(),
     mode='lines',
-    name='Real Stock Price'
-)
+    name='Real Stock Price')
 trace2 = go.Scatter(
     x=list(range(len(predicted_stock_price))),
     y=predicted_stock_price.flatten(),
     mode='lines',
-    name='Predicted Stock Price'
-)
+    name='Predicted Stock Price')
 # Layout
 layout = go.Layout(
-    title='Google Stock Price Prediction',
+    title='Stock Price Prediction',
     xaxis=dict(title='Time'),
-    yaxis=dict(title='Stock Price')
-)
+    yaxis=dict(title='Stock Price'))
 # Figure
 fig = go.Figure(data=[trace1, trace2], layout=layout)
 # Show figure in a browser
 fig.write_html('temp-plot.html', auto_open=True)
-
-print(predicted_stock_price)
