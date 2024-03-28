@@ -27,7 +27,7 @@ loss_type = 'mean_squared_error'
 # PART 1
 # Data Import
 dataset_train = pd.read_csv(dataset_train_location)
-training_set = dataset_train.iloc[:, 1:2].values    # Upper Bound excluded
+training_set = dataset_train[['Open']].values    # Upper Bound excluded
 
 # Feature Scaling
 # Normalisation  Xnorm = (X-min(X))/(max(X)-min(X))
@@ -89,7 +89,7 @@ regressor.fit(X_train, y_train, epochs=epochs_number, batch_size=batch_size_numb
 # Part 3
 # Setting real stock price
 dataset_test = pd.read_csv(dataset_test_location)
-real_stock_price = dataset_test.iloc[:, 1:2].values
+real_stock_price = dataset_test[['Open']].values
 
 # Predicting Stock Price
 dataset_total = pd.concat((dataset_train['Open'], dataset_test['Open']), axis=0)
