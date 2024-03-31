@@ -22,8 +22,6 @@ restore_best_weights = True
 optimizer_type = 'adam'
 loss_type = 'mean_squared_error'
 
-
-
 # PART 1
 # Data Import
 dataset_train = pd.read_csv(dataset_train_location)

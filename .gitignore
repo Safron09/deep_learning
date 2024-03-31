@@ -1,1 +1,5 @@
 temp-plot.html
+*.html
+training_set_prediction_plot.html
+predicted_stock_prices.csv
+future_prediction_plot.html
