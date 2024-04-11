@@ -6,3 +6,5 @@ Pillow
 matplotlib
 keras
 plotly
+minisom
+PyQt5
