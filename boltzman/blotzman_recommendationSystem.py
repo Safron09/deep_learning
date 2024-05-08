@@ -14,3 +14,10 @@ users = pd.read_csv('Data_sets/Boltzman/ml-1m/users.dat', sep='::', header=None,
                      encoding='latin-1')
 ratings = pd.read_csv('Data_sets/Boltzman/ml-1m/ratings.dat', sep='::', header=None, engine='python',
                      encoding='latin-1')
+
+# training and test sets
+training_set = pd.read_csv('Data_sets/Boltzman/ml-100k/u1.base', delimiter='\t')
+training_set = np.array(training_set, dtype='int')
+
+test_set = pd.read_csv('Data_sets/Boltzman/ml-100k/u1.test', delimiter='\t')
+test_set = np.array(test_set, dtype='int')
