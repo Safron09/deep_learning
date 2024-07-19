@@ -23,7 +23,7 @@ salary = 100000         # 200000
 # dataset = pd.read_csv('C:\MY_Coding_projects\Projects\DEEP_Learning\Deep_learning\Data_sets\Churn_Modelling.csv')
 # Code Below helps to make this project portable and does not require Absolut Path
 script_dir = os.path.dirname(os.path.realpath(__file__))
-data_file_path = os.path.join(script_dir, '..', 'Data_sets', 'Churn_Modelling.csv')
+data_file_path = os.path.join(script_dir, '../..', 'Data_sets', 'Churn_Modelling.csv')
 dataset = pd.read_csv(data_file_path)
 
 X = dataset.iloc[:, 3:-1].values
