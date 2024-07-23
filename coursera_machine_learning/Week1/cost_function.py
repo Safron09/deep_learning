@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-sys.path.append('coursera_machine_learning/data/lab_utils_uni.py')
+sys.path.append('coursera_machine_learning/Week1/lab_utils_uni.py')
 import os
 from lab_utils_uni import plt_intuition, plt_stationary, plt_update_onclick, soup_bowl
 
 
-plt.style.use('coursera_machine_learning/data/deeplearning.mplstyle.md')
+plt.style.use('coursera_machine_learning/Week1/deeplearning.mplstyle.md')
 
 x_train = np.array([1.0, 2.0])
 y_train = np.array([300.0, 500.0])
@@ -23,7 +23,7 @@ def compute_cost(x, y, w, b):
 
     Returns
         total_cost (float): The cost of using w,b as the parameters for linear regression
-               to fit the data points in x and y
+               to fit the Week1 points in x and y
     """
     # number of training examples
     m = x.shape[0]

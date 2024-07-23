@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('coursera_machine_learning/data/deeplearning.mplstyle.md')
+plt.style.use('coursera_machine_learning/Week1/deeplearning.mplstyle.md')
 
 # x_train is the input variable (size in 1000 square feet)
 # y_train is the target (price in 1000s of dollars)
@@ -22,7 +22,7 @@ i = 0 # Change this to 1 to see (x^1, y^1)
 x_i = x_train[i]
 y_i = y_train[i]
 print(f"(x^({i}), y^({i})) = ({x_i}, {y_i})")
-# Plot the data points
+# Plot the Week1 points
 plt.scatter(x_train, y_train, marker='x', c='r')
 # Set the title
 plt.title("Housing Prices")
@@ -59,7 +59,7 @@ tmp_f_wb = compute_model_output(x_train, w, b,)
 # Plot our model prediction
 plt.plot(x_train, tmp_f_wb, c='b',label='Our Prediction')
 
-# Plot the data points
+# Plot the Week1 points
 plt.scatter(x_train, y_train, marker='x', c='r',label='Actual Values')
 
 # Set the title
