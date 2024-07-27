@@ -11,7 +11,7 @@ dlorange = '#FF9300';
 dldarkred = '#C00000';
 dlmagenta = '#FF40FF';
 dlpurple = '#7030A0';
-plt.style.use('./deeplearning.mplstyle')
+plt.style.use('ML_and_DL/coursera_machine_learning/Week2/deeplearning.mplstyle.md')
 
 
 def load_data_multi():
@@ -582,7 +582,7 @@ def gradient_descent(X, y, w_in, b_in, cost_function, gradient_function, alpha, 
 
 
 def load_house_data():
-    data = np.loadtxt("./data/houses.txt", delimiter=',', skiprows=1)
+    data = np.loadtxt("ML_and_DL/coursera_machine_learning/Week2/houses.txt", delimiter=',', skiprows=1)
     X = data[:, :4]
     y = data[:, 4]
     return X, y
