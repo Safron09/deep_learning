@@ -14,12 +14,12 @@ variables:
   SECURE_LOG_LEVEL: "debug"
   PYTHON_OPTS: "-Dpassword=$PASSWORD -Dcode=$CODE"
   KUBERNETES_MEMORY_REQUEST: "3Gi"
-  CONTAINER_REPO: registry.gitlab.com/fortressinfosec/demo-straight-outta-qa
+  CONTAINER_REPO: registry.gitlab.com/example/demo-straight-outta-qa
   DOCKER_SHM_SIZE: "1G"
 
 # project variables
-  RF_IMAGE: registry.gitlab.com/fortressinfosec/demo-straight-outta-qa/robot:latest
-  RFSwarmAgent_IMAGE: registry.gitlab.com/fortressinfosec/rf-swarm/agent:main-latest
+  RF_IMAGE: registry.gitlab.com/example/demo-straight-outta-qa/robot:latest
+  RFSwarmAgent_IMAGE: registry.gitlab.com/example/rf-swarm/agent:main-latest
   IMAGE_SELENIUM_GC: selenium/standalone-chrome:latest
   IMAGE_SELENIUM_FF: selenium/standalone-firefox:latest
   IMAGE_SELENIUM_EDGE: selenium/standalone-edge:latest
@@ -41,7 +41,7 @@ create_test_harness_artifact:
   script:
     - mkdir -p ${CI_PROJECT_DIR}/test_harnesses
     - microdnf install -y git
-    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/fortressinfosec/m32rimm.git
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/example/m32rimm.git
     - cp -r ${CI_PROJECT_DIR}/m32rimm/nonprod/int_nonprod/test_harness ${CI_PROJECT_DIR}/test_harnesses
     - cp -r ${CI_PROJECT_DIR}/m32rimm/constraints.txt ${CI_PROJECT_DIR}/constraints.txt
   artifacts:
