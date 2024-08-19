@@ -1,0 +1,155 @@
+stages:
+  - swarm
+  - build-images
+  - tag-images
+  - container-scan
+  - test
+  - backend-test
+  - sikulix
+  - last
+  - staging
+
+variables:
+# global variables
+  SECURE_LOG_LEVEL: "debug"
+  PYTHON_OPTS: "-Dpassword=$PASSWORD -Dcode=$CODE"
+  KUBERNETES_MEMORY_REQUEST: "3Gi"
+  CONTAINER_REPO: registry.gitlab.com/example/demo-straight-outta-qa
+  DOCKER_SHM_SIZE: "1G"
+
+# project variables
+  RF_IMAGE: registry.gitlab.com/example/demo-straight-outta-qa/robot:latest
+  RFSwarmAgent_IMAGE: registry.gitlab.com/example/rf-swarm/agent:main-latest
+  IMAGE_SELENIUM_GC: selenium/standalone-chrome:latest
+  IMAGE_SELENIUM_FF: selenium/standalone-firefox:latest
+  IMAGE_SELENIUM_EDGE: selenium/standalone-edge:latest
+
+include:
+  - template: Security/Container-Scanning.gitlab-ci.yml
+  - local: ${CI_PROJECT_DIR}/k8s/swarm-ci.yml
+  - local: ${CI_PROJECT_DIR}/cijobs/backend.yml
+  - local: ${CI_PROJECT_DIR}/cijobs/pipeline-menu.yml
+  # - template: Security/SAST.gitlab-ci.yml
+  # - template: Security/Dependency-Scanning.gitlab-ci.yml
+  # - template: Security/Secret-Detection.gitlab-ci.yml
+  # - template: Security/License-Scanning.gitlab-ci.yml
+
+create_test_harness_artifact:
+  stage: build-images
+  image:
+    name: redhat/ubi8-minimal:latest
+  script:
+    - mkdir -p ${CI_PROJECT_DIR}/test_harnesses
+    - microdnf install -y git
+    - git clone https://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.com/example/m32rimm.git
+    - cp -r ${CI_PROJECT_DIR}/m32rimm/nonprod/int_nonprod/test_harness ${CI_PROJECT_DIR}/test_harnesses
+    - cp -r ${CI_PROJECT_DIR}/m32rimm/constraints.txt ${CI_PROJECT_DIR}/constraints.txt
+  artifacts:
+    when: on_success
+    expire_in: "10 days"
+    paths:
+    - ${CI_PROJECT_DIR}/test_harnesses
+    - ${CI_PROJECT_DIR}/constraints.txt
+  rules:
+    - if: '$BUILD_CONTAINER == "robot" || $BUILD_CONTAINER == "upstream-robot-base"'
+
+build_upstream_robot_container:
+  stage: build-images
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/container"
+      --dockerfile "${CI_PROJECT_DIR}/container/robotDockerfile"
+      --destination "${CONTAINER_REPO}/upstream_robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}"
+      --build-arg "HARNESS_FILES=../test_harnesses"
+      --build-arg "CONSTRAINTS=../constraints.txt"
+      $KANIKO_CACHE_ARGS
+  rules:
+    - if: $BUILD_CONTAINER == "upstream-robot-base"
+  needs:
+    - job: create_test_harness_artifact
+#Turn off container build on master commit
+#|| $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master"'
+
+build_robot_container:
+  stage: build-images
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/container"
+      --dockerfile "${CI_PROJECT_DIR}/container/downstreamDockerfile"
+      --destination "${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}"
+      --build-arg "HARNESS_FILES=../test_harnesses"
+      --build-arg "CONSTRAINTS=../constraints.txt"
+      $KANIKO_CACHE_ARGS
+  rules:
+    - if: $BUILD_CONTAINER == "robot"
+  needs:
+    - job: create_test_harness_artifact
+#Turn off container build on master commit
+#|| $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "master"'
+
+retag_robot_image:
+  stage: tag-images
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - |-
+      if [ ${CI_COMMIT_REF_NAME} == "master" ]; then
+        crane cp ${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA} ${CONTAINER_REPO}/robot:latest
+      else
+        crane cp ${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA} ${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-latest
+      fi
+    - |-
+      if [ ! -z ${CI_COMMIT_TAG} ]; then
+        crane cp ${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA} ${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_TAG}
+      fi
+  needs:
+    - job: build_robot_container
+  rules: !reference [build_robot_container, rules]
+
+container_scanning:
+  stage: container-scan
+  variables:
+    GIT_STRATEGY: fetch
+    CS_DOCKERFILE_PATH: "${CI_PROJECT_DIR}/container/downstreamDockerfile"
+    CS_IMAGE: "${CONTAINER_REPO}/robot:${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}"
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+  rules: !reference [build_robot_container, rules]
+
+test-run-single-chrome:
+ retry: 1
+ cache: []
+ image: $RF_IMAGE
+ stage: test
+ timeout: 12 hours
+ when: always
+ variables:
+   ROBOT_THREADS: 1
+   ROBOT_REPORTS_DIR: ${CI_PROJECT_DIR}/results/AVM-UI-Chrome
+   ROBOT_TESTS_DIR: ${CI_PROJECT_DIR}/tests/RF/AVM-UI/$TEST_FILE
+   ROBOT_OPTIONS: "--variable AVM_EMAIL:${AVM_EMAIL} --variable AVM_PASSWORD:${AVM_PASSWORD} --variable AVM_TWOFA:${AVM_TWOFA} --variable BROWSER:Chrome ${RUN_OPTIONS}"
+   SECURE_FILES_DOWNLOAD_PATH: "."
+ script:
+   - export PYTHONPATH=$PYTHONPATH:/usr/local/lib:/home/rimm/.local/lib:/home/rimm/.local/lib/python3.10/site-packages/:/usr/local/lib/python3.11/site-packages
+   - export PATH=$PATH:/home/rimm/.local/bin
+   - cd ${CI_PROJECT_DIR}
+   - mv ${CI_PROJECT_DIR}/config.properties/config.properties-gitlab.robot ${CI_PROJECT_DIR}/config.properties/config.properties.robot
+   - run-tests-in-virtual-screen.sh
+ artifacts:
+   when: always
+   paths:
+   - $CI_PROJECT_DIR/results/AVM-UI-Chrome
+   expire_in: 1 week
+ rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /test-run-single-chrome/'

@@ -33,7 +33,7 @@ from sklearn.preprocessing import MinMaxScaler
 sc = MinMaxScaler(feature_range=(0, 1))
 training_set_scaled = sc.fit_transform(training_set)
 
-# Create a data structure with 60 time steps and 1 output
+# Create a Week1 structure with 60 time steps and 1 output
 X_train = []
 y_train = []
 for i in range(60, training_set_scaled.shape[0]):
